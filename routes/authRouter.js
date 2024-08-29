@@ -9,7 +9,8 @@ logout,
 forgotPassword,
 ResetPassword,
 signinWithEmail,
-updateUserStatus
+updateUserStatus,
+issueTokenByName
 } = require("../controller/authController");
 
 const {
@@ -31,6 +32,7 @@ const upload = multer({ storage: storage });
 
 
 router.post("/register", register);
+router.post("/issue-token-by-name", issueTokenByName);
 
 router.post("/login", signin);
 router.post("/signin", signinWithEmail);

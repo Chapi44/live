@@ -179,6 +179,56 @@ const signinWithEmail = async (req, res) => {
 };
 
 
+const issueTokenByName = async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "Name is required" });
+  }
+
+  try {
+    // Find or create a user by name
+    let user = await User.findOne({ name });
+
+    if (!user) {
+      // Create a new user if not found
+      user = new User({ name });
+      await user.save();
+    }
+
+    // Use the secret key and token expiration from environment variables
+    const secretKey = process.env.JWT_SECRET;
+    const tokenExpiration = process.env.JWT_LIFETIME;
+
+    if (!secretKey || !tokenExpiration) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "JWT secret key or token expiration not configured" });
+    }
+
+    // Generate a JSON Web Token (JWT) with specific user fields
+    const token = jwt.sign(
+      { 
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+        username: user.username,
+        bio: user.bio,
+        pictures: user.pictures,
+        profession: user.profession // Include profession field in the token payload
+      },
+      secretKey,
+      { expiresIn: tokenExpiration }
+    );
+
+    res.status(StatusCodes.OK).json({
+      token, 
+      user
+    });
+  } catch (error) {
+    console.error("Error in issueTokenByName controller:", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
+  }
+};
+
 // Logout endpoint
 const logout = async (req, res) => {
   try {
@@ -362,5 +412,6 @@ module.exports = {
   forgotPassword,
   ResetPassword,
   signinWithEmail,
-  updateUserStatus
+  updateUserStatus,
+  issueTokenByName
 };

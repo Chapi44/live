@@ -77,6 +77,40 @@ async function joinCommunity(req, res) {
     }
 }
 
+async function sendCommunityMessage(req, res) {
+    try {
+        const { communityId, message } = req.body;
+        const senderId = req.userId;
+
+        let pictures = [];
+        if (req.files) {
+            pictures = req.files.map(file => baseURL + "/uploads/messages/" + file.filename);
+        }
+
+        const newMessage = new CommunityMessage({
+            communityId,
+            sender: senderId,
+            text: message,
+            img: pictures || "",
+        });
+
+        await newMessage.save();
+
+        // Emit new message to all members in the community
+        const community = await Community.findById(communityId).populate('members', '_id');
+        community.members.forEach(member => {
+            const recipientSocketId = getRecipientSocketId(member._id);
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("newCommunityMessage", newMessage);
+            }
+        });
+
+        res.status(201).json(newMessage);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 async function getCommunityById(req, res) {
     try {
         const { communityId } = req.params;
@@ -155,39 +189,6 @@ async function deleteCommunityById(req, res) {
 }
 
 
-async function sendCommunityMessage(req, res) {
-    try {
-        const { communityId, message } = req.body;
-        const senderId = req.userId;
-
-        let pictures = [];
-        if (req.files) {
-            pictures = req.files.map(file => baseURL + "/uploads/messages/" + file.filename);
-        }
-
-        const newMessage = new CommunityMessage({
-            communityId,
-            sender: senderId,
-            text: message,
-            img: pictures || "",
-        });
-
-        await newMessage.save();
-
-        // Emit new message to all members in the community
-        const community = await Community.findById(communityId).populate('members', '_id');
-        community.members.forEach(member => {
-            const recipientSocketId = getRecipientSocketId(member._id);
-            if (recipientSocketId) {
-                io.to(recipientSocketId).emit("newCommunityMessage", newMessage);
-            }
-        });
-
-        res.status(201).json(newMessage);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}
 
 async function getCommunityMessages(req, res) {
     try {

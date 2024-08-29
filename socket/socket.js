@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const Call = require("../model/call.model");
+const Room = require("../model/room.model");
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +26,7 @@ io.on("connection", (socket) => {
   if (userId !== "undefined") userSocketMap[userId] = socket.id;
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+  // Voice Call Events
   socket.on("voiceCallRequest", async ({ recipientId }) => {
     const recipientSocketId = getRecipientSocketId(recipientId);
     if (recipientSocketId) {
@@ -57,6 +59,67 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Room-based Video Conferencing Events
+  socket.on("createRoom", async ({ roomName }) => {
+    console.log("hey")
+    const room = new Room({
+      roomName,
+      createdBy: userId,
+      participants: [userId],
+    });
+    await room.save();
+    socket.join(room._id.toString());
+    io.to(socket.id).emit("roomCreated", room);
+  });
+
+  socket.on("joinRoom", async ({ roomId }) => {
+    const room = await Room.findById(roomId);
+    if (room) {
+      if (!room.participants.includes(userId)) {
+        room.participants.push(userId);
+        await room.save();
+      }
+      socket.join(roomId);
+      io.to(roomId).emit("userJoined", { userId, roomId });
+    } else {
+      io.to(socket.id).emit("error", "Room not found");
+    }
+  });
+
+  // Temporary chat messages
+  socket.on("sendMessage", ({ roomId, message }) => {
+    const chatMessage = {
+      roomId,
+      sender: userId,
+      text: message,
+      timestamp: new Date(),
+    };
+
+    // Emit the message to everyone in the room
+    io.to(roomId).emit("newMessage", chatMessage);
+  });
+
+  // Screen sharing events
+  socket.on("startScreenShare", ({ roomId }) => {
+    io.to(roomId).emit("startScreenShare", { userId });
+  });
+
+  socket.on("stopScreenShare", ({ roomId }) => {
+    io.to(roomId).emit("stopScreenShare", { userId });
+  });
+
+  // Handle leaving a room
+  socket.on("leaveRoom", async ({ roomId }) => {
+    socket.leave(roomId);
+    const room = await Room.findById(roomId);
+    if (room) {
+      room.participants = room.participants.filter(id => id.toString() !== userId);
+      await room.save();
+      io.to(roomId).emit("userLeft", { userId, roomId });
+    }
+  });
+
+  // Handle user disconnection
   socket.on("disconnect", () => {
     console.log("User disconnected");
     delete userSocketMap[userId];

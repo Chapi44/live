@@ -37,6 +37,7 @@ const ReelRoutes = require("./routes/reelRoutes.js")
 const messageRoutes = require("./routes/messageRoutes.js")
 const callRoutes = require("./routes/callRoutes");
 const communityRoutes = require("./routes/communitiesRoutes")
+const roomRoutes = require("./routes/roomRoutes");
 // Middleware
 const notFoundMiddleware = require("./middelware/not-found.js");
 const errorHandlerMiddleware = require("./middelware/error-handler.js");
@@ -75,6 +76,7 @@ app.use("/api/v1/reel", ReelRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/calls", callRoutes);
 app.use("/api/v1/com", communityRoutes),
+app.use("/api/v1/room", roomRoutes)
 
 
 
