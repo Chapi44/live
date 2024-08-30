@@ -9,8 +9,8 @@ const register = async (req, res) => {
     const {  email, password, username, bio, pictures, profession,phoneNumber,lastname ,  firstname    } = req.body;
 
     // Validate required fields
-    if (!name || !email || !password) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Name, email, and password are required." });
+    if (!email || !password) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: " email, and password are required." });
     }
 
     const emailAlreadyExists = await User.findOne({ email });
