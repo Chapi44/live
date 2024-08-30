@@ -4,7 +4,11 @@ const bcrypt = require("bcryptjs");
 const { Schema } = mongoose; // Import Schema from mongoose
 
 const UserSchema = new Schema({
-  name: {
+  firstname: {
+    type: String,
+    // required: true,
+  },
+  lastname: {
     type: String,
     // required: true,
   },
@@ -18,6 +22,9 @@ const UserSchema = new Schema({
   
   profession: { // Adding the profession field
     type: String
+  },
+  phoneNumber:{
+    type:String
   },
   pictures: {
     type: [String],

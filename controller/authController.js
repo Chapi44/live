@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 
 const register = async (req, res) => {
   try {
-    const { name, email, password, username, bio, pictures, profession } = req.body;
+    const {  email, password, username, bio, pictures, profession,phoneNumber,lastname ,  firstname    } = req.body;
 
     // Validate required fields
     if (!name || !email || !password) {
@@ -28,7 +28,9 @@ const register = async (req, res) => {
 
     // Create the user directly without checking username
     const user = await User.create({
-      name,
+      phoneNumber,
+      lastname , 
+      firstname,
       email,
       password,
       role,
