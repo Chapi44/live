@@ -60,7 +60,13 @@ cloudinary.config({
 });
 
 
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow all origins
+    callback(null, origin);
+  },
+  credentials: true
+}));
 app.use(morgan("tiny"));
 app.use(express.json());
 
