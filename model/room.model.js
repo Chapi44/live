@@ -1,10 +1,22 @@
 const mongoose = require("mongoose");
 
-const RoomSchema = new mongoose.Schema({
-  roomName: { type: String, required: true },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  createdAt: { type: Date, default: Date.now },
-});
+const roomSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    members: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }],
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+}, { timestamps: true });
 
-module.exports = mongoose.model("Room", RoomSchema);
+const Room = mongoose.model("Room", roomSchema);
+
+module.exports = Room;
